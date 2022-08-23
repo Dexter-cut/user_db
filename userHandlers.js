@@ -18,6 +18,8 @@ const getUsersById = (req, res) => {
     database
       .query("select * from users where id = ?", [id])
       .then(([users]) => {
+        res.json(users);
+
         if (users[0] != null) {
           res.status(200).json(users[0]);
         } else {
@@ -30,7 +32,25 @@ const getUsersById = (req, res) => {
       });
   };
 
+  const postUsers = (req, res) => {
+    const { id, firstname, lastname, email, city, language } = req.body;
+  
+    database
+      .query(
+        "INSERT INTO users(id, firstname, lastname, email, city, language) VALUES (?, ?, ?, ?, ?, ?)",
+        [id, firstname, lastname, email, city, language]
+      )
+      .then(([result]) => {
+        res.location(`/api/users/${result.insertId}`).sendStatus(201);
+      })
+      .catch((err) => {
+        console.error(err);
+        res.status(500).send("Error saving the user");
+      });
+  };
+
   module.exports = {
     getUsers,
     getUsersById,
+    postUsers,
     };
