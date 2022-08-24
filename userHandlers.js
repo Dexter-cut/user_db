@@ -12,33 +12,31 @@ const getUsers = (req, res) => {
     });
 };
 
-const getUsersById = (req, res) => {
-    const id = parseInt(req.params.id);
-  
-    database
-      .query("select * from users where id = ?", [id])
-      .then(([users]) => {
-        res.json(users);
+const getUserById = (req, res) => {
+  const id = parseInt(req.params.id);
 
-        if (users[0] != null) {
-          res.status(200).json(users[0]);
-        } else {
-          res.status(404).send("User Not Found");
-        }
-      })
-      .catch((err) => {
-        console.error(err);
-        res.status(500).send("Error retrieving data from database");
-      });
+  database
+    .query("select * from users where id = ?", [id])
+    .then(([users]) => {  // user is an array of one element
+      if (users[0] != null) {
+        res.status(200).json(users[0]);
+      } else {
+        res.status(404).send("User don't exist");
+      }
+    })
+    .catch((err) => { // err is an array of one element
+      console.error(err);
+      res.status(500).send("Error retrieving data from database");
+    });
   };
 
-  const postUsers = (req, res) => {
-    const { id, firstname, lastname, email, city, language } = req.body;
-  
+  const postUser = (req, res) => {
+    const {  firstname, lastname, email, city, language } = req.body;
+
     database
       .query(
-        "INSERT INTO users(id, firstname, lastname, email, city, language) VALUES (?, ?, ?, ?, ?, ?)",
-        [id, firstname, lastname, email, city, language]
+        "INSERT INTO users(firstname, lastname, email, city, language) VALUES ( ?, ?, ?, ?, ?)",
+        [firstname, lastname, email, city, language]
       )
       .then(([result]) => {
         res.location(`/api/users/${result.insertId}`).sendStatus(201);
@@ -49,8 +47,30 @@ const getUsersById = (req, res) => {
       });
   };
 
+  const updateUser = (req, res) => {
+    const id = parseInt(req.params.id);
+    const { firstname, lastname, email, city, language } = req.body;
+
+    database
+      .query(
+        "update users set firstname = ?, lastname = ?, email = ?, city = ?, language = ?  where id = ?",
+        [ firstname, lastname, email, city, language, id]
+      )
+      .then(([result]) => {
+        if (result.affectedRows === 0) {
+          res.status(404).send("Not Found");
+        } else {
+          res.status(204).send("User updated");
+        }
+      })
+      .catch((err) => {
+        console.error(err);
+        res.status(500).send("Error updating the user");
+      });
+  };
   module.exports = {
-    getUsers,
-    getUsersById,
-    postUsers,
+ getUsers,
+ getUserById,
+ postUser,
+ updateUser,
     };
