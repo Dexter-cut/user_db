@@ -1,6 +1,7 @@
 require("dotenv").config();
 
 const express = require("express");
+const { hashPassword } = require("./auth");
 
 const app = express();
 
@@ -15,20 +16,19 @@ const welcome = (req, res) => {
 app.get("/", welcome);
 
 const movieHandlers = require("./movieHandlers");
-const { validateUser, validateMovie } = require("./validators.js");
-
 
 app.get("/api/movies", movieHandlers.getMovies);
-app.post("/api/movies", validateMovie, movieHandlers.postMovie);
 app.get("/api/movies/:id", movieHandlers.getMovieById);
-app.put("/api/movies/:id", validateUser, movieHandlers.updateMovie);
+app.post("/api/movies", movieHandlers.postMovie);
+app.put("/api/movies/:id", movieHandlers.updateMovie);
 app.delete("/api/movies/:id", movieHandlers.deleteMovie);
 
 const userHandlers = require("./userHandlers");
+
 app.get("/api/users", userHandlers.getUsers);
-app.post("/api/users", validateUser, userHandlers.postUser);
 app.get("/api/users/:id", userHandlers.getUserById);
-app.put("/api/users/:id", validateUser, userHandlers.updateUser);
+app.post("/api/users", hashPassword, userHandlers.postUser);
+app.put("/api/users/:id", hashPassword, userHandlers.updateUser);
 app.delete("/api/users/:id", userHandlers.deleteUser);
 
 app.listen(port, (err) => {
@@ -38,4 +38,3 @@ app.listen(port, (err) => {
     console.log(`Server is listening on ${port}`);
   }
 });
-

@@ -1,52 +1,33 @@
-const movies = [
-  {
-    id: 1,
-    title: "Citizen Kane",
-    director: "Orson Wells",
-    year: "1941",
-    colors: false,
-    duration: 120,
-  },
-  {
-    id: 2,
-    title: "The Godfather",
-    director: "Francis Ford Coppola",
-    year: "1972",
-    colors: true,
-    duration: 180,
-  },
-  {
-    id: 3,
-    title: "Pulp Fiction",
-    director: "Quentin Tarantino",
-    year: "1994",
-    color: true,
-    duration: 180,
-  },
-];
-
-
 const database = require("./database");
 
 const getMovies = (req, res) => {
-  let sql = "select * from movies";
-  const sqlValues = [];
-  
+  const initialSql = "select * from movies";
+  const where = [];
+
   if (req.query.color != null) {
-    sql += " where color = ?";
-    sqlValues.push(req.query.color);
-  
-    if (req.query.max_duration != null) {
-      sql += " and duration <= ?";
-      sqlValues.push(req.query.max_duration);
-    }
-  } else if (req.query.max_duration != null) {
-    sql += " where duration <= ?";
-    sqlValues.push(req.query.max_duration);
+    where.push({
+      column: "color",
+      value: req.query.color,
+      operator: "=",
+    });
+  }
+  if (req.query.max_duration != null) {
+    where.push({
+      column: "duration",
+      value: req.query.max_duration,
+      operator: "<=",
+    });
   }
 
   database
-    .query(sql, sqlValues)
+    .query(
+      where.reduce(
+        (sql, { column, operator }, index) =>
+          `${sql} ${index === 0 ? "where" : "and"} ${column} ${operator} ?`,
+        initialSql
+      ),
+      where.map(({ value }) => value)
+    )
     .then(([movies]) => {
       res.json(movies);
     })
@@ -136,5 +117,5 @@ module.exports = {
   getMovieById,
   postMovie,
   updateMovie,
-  deleteMovie, // don't forget to export your function ;)
+  deleteMovie,
 };
